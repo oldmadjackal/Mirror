@@ -1,0 +1,16 @@
+[Unit]
+Description=Ethereum Scan
+After=syslog.target network.target
+
+[Service]
+Type=forking
+#PIDFile=/opt/ethereum_mirror/scan/ethereum_scan.pid
+WorkingDirectory=/opt/ethereum_mirror/scan
+User=ruabop
+ExecStart=/opt/ethereum_mirror/ethereum_mirror -time:600
+ExecStop=/bin/kill -15 $MAINPID
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
