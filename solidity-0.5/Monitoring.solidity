@@ -1,0 +1,188 @@
+pragma solidity ^0.5.0;
+
+// Мониторинг
+// 
+
+contract Monitoring
+{
+    address    Owner ;
+
+    mapping (address => bytes32)  CheckMaster ;
+
+    bytes32    CheckMark ;
+     string    CheckFile ;
+
+    mapping (bytes32 => address) Agents ;
+    uint256  AgentsMode ;
+	
+     bytes32[]  NodesList ;
+
+    struct NodePars
+    {
+      address  agent ;
+      bytes32  time ;
+      uint256  last_block ;
+      bytes32  last_file ;
+      uint256  balance ;
+      uint256  errors ;
+      uint256  pendings ;
+       string  details ;
+       string  alarm ;
+    }
+
+    mapping (bytes32 => NodePars) NodesPars ;
+
+    event NodeAlive(bytes32  node_id, address  agent, bytes32  time, uint256  last_block, bytes32  last_file, uint256  balance, uint256  errors, uint256  pendings) ;
+    event NodeAlarm   (bytes32  node_id, address  agent, string  alarm) ;
+    event DeliveryFile(string link) ; 
+
+    constructor() public 
+    {
+
+            Owner=msg.sender ;
+      CheckMaster[msg.sender]="Y" ;
+
+       AgentsMode= 0 ;
+    }
+
+//    function() payable {}
+	
+//=============== Self-Description Iface
+//
+// 0x55d93027
+    function SD_Version() public pure returns (bytes32)
+    {
+       return("Askona 1.0") ;
+    }
+
+// 0x0d55e9f5
+    function SD_Identify() public pure returns (bytes32)
+    {
+       return("Monitoring.2023-06-08") ;
+    }
+
+//=============== Application Iface
+//
+// 0xdcf39ad9
+    function SetCheckMaster(address  agent_, bytes32 flag_) public
+    {
+       require(msg.sender == Owner &&
+                   agent_ != Owner   ) ;
+
+       CheckMaster[agent_]=flag_ ;
+    }
+
+// 0x22744bfb
+    function SetAgent(bytes32 node_id_, address  agent_) public
+    {
+       require(msg.sender == Owner) ;
+
+       Agents[node_id_]=agent_ ;
+
+             AgentsMode= 1 ;
+    }
+
+//0xaf152ca6
+    function SetAlive(bytes32  node_id_, bytes32  time_, uint256  last_block_, bytes32  last_file_, uint256  balance_, uint256  errors_, uint256  pendings_) public
+    {
+       if(AgentsMode      == 1        &&
+	      Agents[node_id_]!=msg.sender  )  require(false) ;
+
+       if(NodesPars[node_id_].time=="")  NodesList.push(node_id_) ;
+       
+          NodesPars[node_id_].agent     =msg.sender ;
+          NodesPars[node_id_].time      =time_ ;
+          NodesPars[node_id_].last_block=last_block_ ;
+          NodesPars[node_id_].last_file =last_file_ ;
+          NodesPars[node_id_].balance   =balance_ ;
+          NodesPars[node_id_].errors    =errors_ ;
+          NodesPars[node_id_].pendings  =pendings_ ;
+       
+       emit NodeAlive(node_id_, msg.sender, time_, last_block_, last_file_, balance_, errors_, pendings_) ;
+    }
+
+//0x2c55c1e0
+    function SetAlarm(bytes32  node_id_, string memory alarm_) public
+    {
+       if(AgentsMode      == 1        &&
+	      Agents[node_id_]!=msg.sender  )  require(false) ;
+
+          NodesPars[node_id_].alarm=alarm_ ;
+       
+       emit NodeAlarm(node_id_, msg.sender, alarm_) ;
+    }
+
+//0xa9425213
+    function SetDetails(bytes32  node_id_, string memory details_) public
+    {
+       if(AgentsMode      == 1        &&
+	      Agents[node_id_]!=msg.sender  )  require(false) ;
+
+          NodesPars[node_id_].details=details_ ;      
+    }
+
+//0x12838c3e
+    function ClearAlive(bytes32  node_id_) public
+    {
+       if(msg.sender!=Owner)  return ;
+      
+          NodesPars[node_id_].agent=address(0x00) ;
+    }
+
+// 0xff4d9af2
+    function SetCheckMark(bytes32 mark_) public
+    {
+         require(CheckMaster[msg.sender]=="Y") ;
+
+       CheckMark=mark_ ;
+    }
+
+// 0x04a74a8c
+    function SetCheckFile(string memory file_id_) public
+    {
+         require(CheckMaster[msg.sender]=="Y") ;
+
+       CheckFile=file_id_ ;
+
+	   emit DeliveryFile(file_id_) ; 
+    }
+
+// 0x63858020
+    function GetCheckMaster(address  agent_)  public view returns (bytes32 retVal)
+    {
+       return(CheckMaster[agent_]) ;
+    }
+
+// 0x008a4b28
+    function GetCheckMark()  public view returns (bytes32 retVal)
+    {
+       return(CheckMark) ;
+    }
+
+// 0x42fcbba2
+    function GetCheckFile()  public view returns (string memory retVal)
+    {
+       return(CheckFile) ;
+    }
+
+// 0x1ac8fc46
+    function GetNodesList() public view returns (bytes32[] memory retVal)
+    {    
+       return(NodesList) ; 
+    }
+
+// 0x825e0d82
+    function GetNode(bytes32 node_id_) public view returns (address, bytes32, uint256, bytes32, uint256, uint256, uint256 retVal)
+    {
+       return(NodesPars[node_id_].agent,      NodesPars[node_id_].time,   
+              NodesPars[node_id_].last_block, NodesPars[node_id_].last_file,
+              NodesPars[node_id_].balance,    NodesPars[node_id_].errors,    NodesPars[node_id_].pendings) ;
+    }
+
+// 0x988a5fc6
+    function GetExtended(bytes32 node_id_) public view returns(string memory, string memory retVal)
+    {
+       return(NodesPars[node_id_].alarm, NodesPars[node_id_].details) ;
+    }
+
+}

@@ -1,0 +1,138 @@
+pragma solidity ^0.5.0;
+
+// Список участников (узлов) системы
+
+contract Members
+{
+     address  Owner ;
+     uint256  Version ;
+
+    struct Member
+    {
+      uint256  Version ;
+      bytes32  Name ;
+      bytes32  Lock ;
+      bytes32  Role ;
+      address  Account ;
+      address  MailBox ;
+      bytes32  SignID ;
+       string  CertRef ;
+      bytes32  CertType ;
+       string  DataRef ;
+    }
+
+    mapping (bytes32 => Member) MembersList ;
+
+     bytes32[] MembersIDs ;
+     uint256   MembersCnt ;
+     
+    event MemberUpdated(bytes32 id, uint256 version) ; 
+     
+    constructor() public 
+    {
+        Owner     =msg.sender ; 
+        Version   = 1 ;
+        MembersCnt= 0 ;                           
+    }
+
+//    function() payable {}
+
+//=============== Self-Description Iface
+//
+// 0x55d93027
+    function SD_Version() public pure returns (bytes32)
+    {
+       return("Askona 1.0") ;
+    }
+
+// 0x0d55e9f5
+    function SD_Identify() public pure returns (bytes32)
+    {
+       return("Members.2023-06-12") ;
+    }
+
+//=============== Application Iface
+//
+// 0x0ae50a39
+    function GetOwner() public view returns (address)
+    {
+       return(Owner) ;
+    }
+
+// 0xee6e1840
+    function GetMembers() public view returns (uint256, bytes32[] memory retVal)
+    {
+       return(Version, MembersIDs) ;
+    }
+
+// 0xd452432e
+    function GetMember(bytes32  id_) public view returns (bytes32, uint256, bytes32, bytes32, address, address, string memory)
+    {
+       return(MembersList[id_].Name, MembersList[id_].Version, MembersList[id_].Lock,
+              MembersList[id_].Role, MembersList[id_].Account, MembersList[id_].MailBox, MembersList[id_].DataRef) ;
+    }
+
+// 0x05bb4133
+    function GetMemberCert(bytes32  id_) public view returns (bytes32, bytes32, string memory)
+    {
+       return(MembersList[id_].SignID, MembersList[id_].CertType, MembersList[id_].CertRef) ;
+    }
+
+// 0x6e418270
+//RecordMember(bytes32,bytes32,bytes32,bytes32,address,address,bytes32,bytes32,string,string)
+    function RecordMember(bytes32  id_, 
+                          bytes32  name_,
+                          bytes32  lock_,
+                          bytes32  role_,
+                          address  account_,
+                          address  mailbox_,
+                          bytes32  sign_id_, 
+                          bytes32  cert_type_,
+                           string memory cert_ref_,
+                           string memory data_ref_) public
+    {
+      uint256  i ;
+
+	  
+       require(msg.sender==Owner);
+
+       if(MembersList[id_].Version>0)
+	   { 
+          MembersList[id_].Version=MembersList[id_].Version+1 ;
+	   }
+	   else
+	   {
+	     MembersList[id_].Version = 1 ;
+         MembersIDs.length+=2 ;
+         MembersIDs[2*MembersCnt  ]=id_ ;
+         MembersIDs[2*MembersCnt+1]= bytes32(MembersList[id_].Version);
+                      MembersCnt++ ;
+					  
+	   }
+
+         MembersList[id_].Name    =name_ ;
+         MembersList[id_].Lock    =lock_ ;
+         MembersList[id_].Role    =role_ ;
+         MembersList[id_].Account =account_ ;
+         MembersList[id_].MailBox =mailbox_ ;
+         MembersList[id_].SignID  =sign_id_ ;
+         MembersList[id_].CertType=cert_type_ ;
+         MembersList[id_].CertRef =cert_ref_ ;
+         MembersList[id_].DataRef =data_ref_ ;
+
+       if(MembersList[id_].Version>1)
+	   { 
+         for(i=0 ; i<MembersCnt ; i++)
+           if(MembersIDs[2*i]==id_) {
+                                      MembersIDs[2*i+1]=bytes32(MembersList[id_].Version) ;
+                                       break ;
+                                    }
+       }
+
+                         Version++ ;
+
+        emit MemberUpdated(id_, MembersList[id_].Version) ; 
+   }
+
+}
+

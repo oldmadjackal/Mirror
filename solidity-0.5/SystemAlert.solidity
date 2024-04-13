@@ -1,0 +1,73 @@
+pragma solidity ^0.5.0;
+
+// Состояние системы
+
+contract SystemAlert
+{
+    address   Owner ;
+    uint256   Version ;
+    address   Configuration ;
+
+    event AlertRaised(uint256 version); 
+
+    constructor(address configuration_) public 
+    {
+        Owner         = msg.sender ; 
+        Version       = 0 ;
+        Configuration = configuration_ ;
+    }
+
+//    function() payable {}
+
+//=============== Self-Description Iface
+//
+// 0x55d93027
+    function SD_Version() external pure returns (bytes32)
+    {
+       return("Askona 1.0") ;
+    }
+
+// 0x0d55e9f5
+    function SD_Identify() external pure returns (bytes32)
+    {
+       return("SystemAlert.2023-06-02") ;
+    }
+
+//=============== Application Iface
+//
+// 0x0ae50a39
+    function GetOwner() public view returns (address)
+    {
+       return(Owner) ;
+    }
+
+// 0xabd95b95
+    function GetStatus() public view returns (uint256, address)
+    {
+       return(Version, Configuration) ;
+    }
+
+// 0x66a5123c
+    function RaiseAlert() public
+    {
+       if(msg.sender!=Owner)  return ;
+
+        Version++ ;
+
+        emit AlertRaised(Version) ; 
+    }
+
+// 0x0c7ec864
+    function AlterConfiguration(address  old_, address  new_) public
+    {
+       require(msg.sender == Owner);
+
+       if(Configuration!=old_)  return ;
+       
+        Configuration = new_ ;
+          Version++ ;
+
+        emit AlertRaised(Version) ; 
+    }
+
+}

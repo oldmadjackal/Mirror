@@ -1,0 +1,93 @@
+pragma solidity ^0.5.0;
+
+// Конфигурация системы
+
+contract Configuration
+{
+
+    address   Owner ;
+    bytes32   Version ;
+    uint256   Commit ;
+
+    mapping (bytes32 => bytes32) Addresses ;
+
+    bytes32[]   Keys;
+
+    event VersionChanged(bytes32 version); 
+    event CommitChanged(uint256 commit); 
+
+    constructor() public 
+    {
+        Owner  = msg.sender ; 
+        Version="1.0" ;
+        Commit = 0 ;
+    }
+
+//    function() payable {}
+	
+//=============== Self-Description Iface
+//
+// 0x55d93027
+    function SD_Version() public pure returns (bytes32)
+    {
+       return("Askona 1.0") ;
+    }
+
+// 0x0d55e9f5
+    function SD_Identify() public pure returns (bytes32)
+    {
+       return("Configuration.2023-06-02") ;
+    }
+
+
+//=============== Application Iface
+//
+// 0x0ae50a39
+    function GetOwner() public view returns (address)
+    {
+       return(Owner) ;
+    }
+
+// 0x4ea4f135
+    function GetCommit() public view returns (bytes32, uint256)
+    {
+       return(Version, Commit) ;
+    }
+
+// 0xe0643e89
+    function GetValue(bytes32  key_) public view returns (bytes32)
+    {
+       return(Addresses[key_]) ;
+    }
+
+// 0xda31a2a5
+    function GetKeys() public view returns (bytes32[] memory)
+    {
+       return(Keys) ;
+    }
+
+// 0x87486510
+    function SetVersion(bytes32  version_) public
+    {
+       require(msg.sender==Owner);
+
+        Version=version_ ;
+
+         emit VersionChanged(version_); 
+    }
+
+// 0x926b2cda
+    function SetValue(bytes32  key_, bytes32  value_) public
+    {
+       require(msg.sender==Owner);
+
+       if(Addresses[key_]=="")  Keys.push(key_) ;
+
+        Addresses[key_]=value_ ;
+
+		Commit++ ;
+
+        emit  CommitChanged(Commit) ; 
+    }
+
+}
